@@ -1,5 +1,6 @@
 /* ─── The Observatory ─── */
 
+/* Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -23,11 +24,94 @@ body {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  background: #0e0d0c;
+  color: #c8c3bc;
+  transition: background 1.2s ease, color 1.2s ease;
 }
 
+/* ─── Tints: subtle per-page color shift ─── */
+body.tint-cold  { background: #0d0e10;  color: #c4c0b8; }
+body.tint-amber { background: #100e0b; color: #ccc4b4; }
+body.tint-red   { background: #110d0c;   color: #c8bcb8; }
+body.tint-green { background: #0c0e0c; color: #bcc8c0; }
+body.tint-stark { background: #0a0a09; color: #d8d4cc; }
+
+/* ─── Status line: top-left system readout ─── */
+.status {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(200, 195, 188, 0.22);
+  user-select: none;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.status .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 0.6em;
+  vertical-align: middle;
+  animation: pulse 3.4s ease-in-out infinite;
+  opacity: 0.55;
+}
+
+body.tint-red .status   { color: rgba(179, 64, 44, 0.35); }
+body.tint-green .status { color: rgba(90, 138, 106, 0.40); }
+body.tint-amber .status { color: rgba(200, 170, 120, 0.32); }
+body.tint-stark .status { color: rgba(216, 212, 204, 0.32); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.85; }
+}
+
+/* ─── Hairline: left margin rule ─── */
+.hairline {
+  position: fixed;
+  top: 0;
+  left: 1.5rem;
+  width: 1px;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(200, 195, 188, 0.05) 12%,
+    rgba(200, 195, 188, 0.05) 88%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Corner stamp: bottom-right anchor time ─── */
+.corner {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(200, 195, 188, 0.18);
+  user-select: none;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ─── Main content ─── */
 .p {
   width: 100%;
   max-width: 33em;
+  position: relative;
+  z-index: 5;
 }
 
 .c p {
@@ -38,11 +122,12 @@ body {
   margin-bottom: 0;
 }
 
-/* Barely-there links */
+/* ─── Links: barely there until hover ─── */
 a {
-  color: #c8c3bc;
+  color: inherit;
   text-decoration: none;
   border-bottom: 1px dotted rgba(200, 195, 188, 0.22);
+  transition: color 0.18s ease, border-color 0.18s ease;
 }
 
 a:hover, a:focus-visible {
@@ -67,7 +152,116 @@ a:focus-visible {
   color: #c8c3bc !important;
 }
 
-/* Reduced motion */
+/* ─── Page-specific extras ─── */
+
+/* Static / corruption: subtle noise overlay */
+body.extra-static::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 255, 255, 0.012) 2px,
+    rgba(255, 255, 255, 0.012) 3px
+  );
+  pointer-events: none;
+  z-index: 2;
+  animation: static-shift 0.18s steps(2) infinite;
+}
+
+@keyframes static-shift {
+  0%   { opacity: 0.7; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 0.8; }
+}
+
+/* Frozen: time feels stuck — text gets a barely-blurred quality */
+body.extra-frozen .c p {
+  text-shadow: 0 0 0.5px currentColor;
+  filter: contrast(0.95);
+}
+
+/* Grid: star chart backdrop — barely visible crosshatch */
+body.extra-grid::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200, 195, 188, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 195, 188, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Signal: faint oscilloscope glow on the status dot only */
+body.extra-signal .status .dot {
+  background: #5a8a6a;
+  animation: pulse-signal 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-signal {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%      { opacity: 0.95; transform: scale(1.2); }
+}
+
+/* Wave: status dot uses a longer, slower pulse for echo */
+body.extra-wave .status .dot {
+  background: #5a8a6a;
+  animation: pulse-wave 2.0s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+@keyframes pulse-wave {
+  0%, 100% { opacity: 0.2; }
+  50%      { opacity: 0.7; }
+}
+
+/* Decode: a tiny decode key floats in the corner for /numbers/ */
+body.extra-decode::after {
+  content: 'A=1 B=2 C=3 D=4 E=5 F=6 G=7 H=8 I=9 J=10 K=11 L=12 M=13 N=14 O=15';
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(200, 195, 188, 0.16);
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+  max-width: 90vw;
+  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+
+/* Gaze: afterimage effect — text-shadow ghost */
+body.extra-gaze .c p {
+  text-shadow:
+    0.6px 0 0 rgba(179, 64, 44, 0.18),
+   -0.6px 0 0 rgba(200, 195, 188, 0.05);
+}
+
+/* Thin: permeability — text appears slightly translucent */
+body.extra-thin .c p {
+  letter-spacing: 0.01em;
+  filter: contrast(1.05);
+}
+
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
-  * { transition-duration: 0s !important; }
+  body, a, .status .dot, body::before, body::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ─── Mobile padding adjustments ─── */
+@media (max-width: 600px) {
+  .status { top: 0.9rem; left: 0.9rem; font-size: 9px; letter-spacing: 0.14em; }
+  .corner { bottom: 0.9rem; right: 0.9rem; }
+  .hairline { left: 0.9rem; }
+  body { padding: 3.5rem 1.2rem; }
+  body.extra-decode::after { left: 0.9rem; bottom: 0.9rem; font-size: 8px; }
 }
