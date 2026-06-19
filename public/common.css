@@ -36,42 +36,44 @@ body.tint-red   { background: #110d0c;   color: #c8bcb8; }
 body.tint-green { background: #0c0e0c; color: #bcc8c0; }
 body.tint-stark { background: #0a0a09; color: #d8d4cc; }
 
-/* ─── Status line: top-left system readout ─── */
+/* ─── Status line: top-left dot pattern. No text — pure visual. ───
+   Each page gets a unique pattern of small dots. The first dot pulses.
+   The pattern is a visual signature, not information — it can't mislead
+   the player into thinking any of the dots are clues. */
 .status {
   position: fixed;
   top: 1.5rem;
   left: 1.5rem;
-  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(200, 195, 188, 0.22);
+  display: flex;
+  gap: 5px;
+  z-index: 10;
   user-select: none;
   pointer-events: none;
-  z-index: 10;
-  white-space: nowrap;
 }
 
-.status .dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  margin-right: 0.6em;
-  vertical-align: middle;
+.status .mark {
+  display: block;
+  width: 5px;
+  height: 5px;
+  background: rgba(200, 195, 188, 0.10);
+}
+
+.status .mark.on {
+  background: rgba(200, 195, 188, 0.40);
+}
+
+.status .mark.pulse {
   animation: pulse 3.4s ease-in-out infinite;
-  opacity: 0.55;
 }
 
-body.tint-red .status   { color: rgba(179, 64, 44, 0.35); }
-body.tint-green .status { color: rgba(90, 138, 106, 0.40); }
-body.tint-amber .status { color: rgba(200, 170, 120, 0.32); }
-body.tint-stark .status { color: rgba(216, 212, 204, 0.32); }
+body.tint-red .status .mark.on   { background: rgba(179, 64, 44, 0.45); }
+body.tint-green .status .mark.on { background: rgba(90, 138, 106, 0.50); }
+body.tint-amber .status .mark.on { background: rgba(200, 170, 120, 0.42); }
+body.tint-stark .status .mark.on { background: rgba(216, 212, 204, 0.45); }
 
 @keyframes pulse {
   0%, 100% { opacity: 0.25; }
-  50%      { opacity: 0.85; }
+  50%      { opacity: 0.95; }
 }
 
 /* ─── Hairline: left margin rule ─── */
@@ -92,19 +94,23 @@ body.tint-stark .status { color: rgba(216, 212, 204, 0.32); }
   z-index: 1;
 }
 
-/* ─── Corner stamp: bottom-right anchor time ─── */
+/* ─── Corner stamp: bottom-right geometric bracket. No text. ─── */
 .corner {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
-  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: rgba(200, 195, 188, 0.18);
-  user-select: none;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid rgba(200, 195, 188, 0.18);
+  border-bottom: 1px solid rgba(200, 195, 188, 0.18);
   pointer-events: none;
   z-index: 10;
 }
+
+body.tint-red .corner   { border-color: rgba(179, 64, 44, 0.22); }
+body.tint-green .corner { border-color: rgba(90, 138, 106, 0.25); }
+body.tint-amber .corner { border-color: rgba(200, 170, 120, 0.20); }
+body.tint-stark .corner { border-color: rgba(216, 212, 204, 0.22); }
 
 /* ─── Main content ─── */
 .p {
@@ -223,20 +229,23 @@ body.extra-wave .status .dot {
   50%      { opacity: 0.7; }
 }
 
-/* Decode: a tiny decode key floats in the corner for /numbers/ */
+/* Decode: a visual cipher key for /numbers/ — two rows of small dots.
+   26 dots in a 2×13 grid. Pure visual, no text. The page text already
+   reveals the answer; this is a decorative element. */
 body.extra-decode::after {
-  content: 'A=1 B=2 C=3 D=4 E=5 F=6 G=7 H=8 I=9 J=10 K=11 L=12 M=13 N=14 O=15';
+  content: '';
   position: fixed;
   bottom: 1.5rem;
   left: 1.5rem;
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  color: rgba(200, 195, 188, 0.16);
+  width: 78px;
+  height: 12px;
+  background-image: radial-gradient(circle, rgba(200,195,188,0.18) 1.2px, transparent 1.5px);
+  background-size: 6px 6px;
+  background-position: 0 0;
   pointer-events: none;
   user-select: none;
   z-index: 10;
-  max-width: 90vw;
-  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  opacity: 0.6;
 }
 
 /* Gaze: afterimage effect — text-shadow ghost */
@@ -263,9 +272,10 @@ body.extra-thin .c p {
 
 /* ─── Mobile padding adjustments ─── */
 @media (max-width: 600px) {
-  .status { top: 0.9rem; left: 0.9rem; font-size: 9px; letter-spacing: 0.14em; }
-  .corner { bottom: 0.9rem; right: 0.9rem; }
+  .status { top: 0.9rem; left: 0.9rem; gap: 4px; }
+  .status .mark { width: 4px; height: 4px; }
+  .corner { bottom: 0.9rem; right: 0.9rem; width: 6px; height: 6px; }
   .hairline { left: 0.9rem; }
   body { padding: 3.5rem 1.2rem; }
-  body.extra-decode::after { left: 0.9rem; bottom: 0.9rem; font-size: 8px; }
+  body.extra-decode::after { left: 0.9rem; bottom: 0.9rem; }
 }
