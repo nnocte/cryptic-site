@@ -1,346 +1,366 @@
-// generate.mjs — Builds all pages for the cryptic puzzle-network site
-import { mkdirSync, writeFileSync, cpSync, existsSync, readFileSync } from 'fs';
-import { join, dirname } from 'path';
+// generate.mjs — Builds the refactored ARG: "The Observatory"
+import { mkdirSync, writeFileSync, rmSync } from 'fs';
+import { join } from 'path';
 import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, 'public');
-const CSS_PATH = join(OUT, 'common.css');
 
 // ─── Design Tokens ────────────────────────────────────────────────
-// Background: near-black. Not #000 — slightly off, like an old screen.
-// Text: dim warm gray. Not pure white — it should feel like reading in
-//       a room where the lights are mostly off.
-// Font: monospace. System-level. A found document, not a composed one.
-// Links: barely distinguishable — same color, underline on hover only.
+// Near-black background, single warm-gray text color, system monospace.
+// Links are almost invisible until hovered/focused.
 const TOKENS = {
   bg: '#0e0d0c',
-  text: '#b5b0ab',
+  text: '#c8c3bc',
   textDim: '#6b6763',
-  link: '#b5b0ab',
-  linkHover: '#d4cfc8',
+  link: '#c8c3bc',
+  linkHover: '#e8e4df',
   selection: '#3a3632',
   font: `ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace`,
-  fz: '13px',
-  lh: '1.9',
-  maxW: '32em',
-  pageTitle: '—',
+  fz: '16px',
+  lh: '1.85',
+  maxW: '33em',
+};
+
+// ─── Word → URL mapping ───────────────────────────────────────────
+// Every **word** in page text is looked up here and turned into a link.
+const WORD_MAP = {
+  'elias':        '/elias/',
+  'coat':         '/coat/',
+  'desk':         '/desk/',
+  'logbook':      '/log/',
+  'twelve':       '/12/',
+  '03:14':        '/0314/',
+  'chart':        '/chart/',
+  'antares':      '/antares/',
+  'frequency':    '/frequency/',
+  '1420':         '/1420/',
+  'echo':         '/echo/',
+  'delay':        '/delay/',
+  'eight':        '/8/',
+  'numbers':      '/numbers/',
+  'hello':        '/hello/',
+  'question':     '/question/',
+  'looks back':   '/looks-back/',
+  'choose':       '/choose/',
+  'open':         '/open/',
+  'close':        '/close/',
+  'visible':      '/visible/',
+  'stay':         '/stay/',
+  'not mine':     '/not-mine/',
+  'previous':     '/previous/',
+  'dark':         '/dark/',
+  'eyes':         '/eyes/',
+  'room':         '/room/',
+  'drawer':       '/drawer/',
+  'photograph':   '/photo/',
+  'window':       '/window/',
+  'roof':         '/roof/',
+  'kitchen':      '/kitchen/',
+  'bedroom':      '/bedroom/',
+  'clock':        '/clock/',
 };
 
 // ─── Page Data ────────────────────────────────────────────────────
-// Each page: { route, lines: string[] }
-// Lines are rendered as paragraphs. Words wrapped in `**...**` become
-// <a href='...'> links. Use exact URL path (e.g. `/one/`).
-//
-// Dead-end pages (no ** clues): threshold, five, still, return/return/return,
-//   seven, eight, between/and/between, fork/left/path, dead/end,
-//   dead/end/further, unfinished, loop, wait, omit.
-// Time-dependent page: wait (uses hour-based JS).
-
+// route: directory name(s) for this page.
+// lines: 1–3 short sentences. Wrap a clue word in **word** to make it a link.
 const PAGES = [
-  // ── Entry ───────────────────────────────────────────────────────
+  // ── Act I: Discovery ─────────────────────────────────────────────
   {
     route: '/',
     lines: [
-      'Some doors only open when you stop knocking.',
-      'The first **one** appeared after I gave up counting.',
-    ],
-  },
-  // ── Narrative chain (1→2→3→door) ────────────────────────────────
-  {
-    route: 'one',
-    lines: [
-      "You've already taken steps you don't remember taking.",
-      'The **second** is indistinguishable from the first.',
+      'The observatory gate is rusted shut.',
+      "A note is taped to it: 'Name the keeper of the light. The door knows the answer.'",
+      'Below, someone has scratched a name into the metal: **elias**.',
     ],
   },
   {
-    route: 'second',
+    route: 'elias',
     lines: [
-      'Between two points, a line. Between two people, a gap.',
-      'The **third** was never the point.',
+      'Inside, the air is cold.',
+      'A **coat** hangs by the door. A **desk** sits against the wall.',
+      'On it, a **logbook** is open to page twelve.',
     ],
   },
   {
-    route: 'third',
+    route: 'coat',
     lines: [
-      'Three is the smallest crowd.',
-      'Stop keeping count and the **door** appears.',
-    ],
-  },
-  // ── Source branch ───────────────────────────────────────────────
-  {
-    route: 'source/door',
-    lines: [
-      'A door is also a wall.',
-      'It depends on whether you try to open it or walk through it.',
-      'The **threshold** is the part everyone forgets.',
+      "Elias's coat is still damp.",
+      'It smells like rain and metal.',
+      'In the pocket, a receipt from a town that is not on any map.',
     ],
   },
   {
-    route: 'threshold',
+    route: 'desk',
     lines: [
-      'A threshold is just a line drawn and agreed upon.',
-      'You knew before you arrived.',
-    ],
-    // dead end
-  },
-  // ── Cycle branch (four→0→one) ──────────────────────────────────
-  {
-    route: 'four',
-    lines: [
-      'Four has no **beginning** you can see.',
-      'It was always already in progress.',
+      'The **drawer** is locked.',
+      'On top: a pen, a half-empty notebook, and a **photograph** turned face-down.',
     ],
   },
   {
-    route: '0',
+    route: 'drawer',
     lines: [
-      'Before the first step is the zeroth step.',
-      'You forgot it the moment you took it.',
-      'Return to the **first** and see if it reads differently now.',
+      'You force the drawer.',
+      'Inside: a single key, unlabeled.',
+      'You try it on every door. It fits none of them.',
     ],
-  },
-  // ── Shape branch ────────────────────────────────────────────────
-  {
-    route: 'five',
-    lines: [
-      'Five is the shape of a hand not reaching.',
-      'The next is easier to miss.',
-    ],
-    // dead end (the next would be six — but there is no /six)
   },
   {
-    route: 'still',
+    route: 'photo',
     lines: [
-      'Stillness is not silence.',
-      'The difference is what you hear when you stop listening for it.',
+      'You turn the photograph over.',
+      'Two people stand in front of the observatory.',
+      'One is Elias. The other has no face — just static, or a developing error.',
     ],
-    // dead end
   },
-  // ── Echo chain ──────────────────────────────────────────────────
+  {
+    route: 'log',
+    lines: [
+      'The logbook is full of crossed-out dates.',
+      'Only one entry is clean: number **twelve**, dated December 12.',
+    ],
+  },
+  {
+    route: '12',
+    lines: [
+      'December 12. Clear skies.',
+      'It appeared again at **03:14**. Same position.',
+      'I am certain now that it sees me when I look at it.',
+    ],
+  },
+  {
+    route: 'clock',
+    lines: [
+      'The wall clock stopped at 03:14.',
+      'The second hand trembles but does not move forward.',
+    ],
+  },
+  {
+    route: '0314',
+    lines: [
+      'At 03:14 the equipment hums.',
+      'The telescope turns on its own toward the southern wall.',
+      'The **chart** there has one star circled.',
+    ],
+  },
+  {
+    route: 'window',
+    lines: [
+      'Outside, the hills roll away under a sky too bright for the hour.',
+      'A second moon would explain the shadows.',
+      'There is not one.',
+    ],
+  },
+  // ── Act II: The Signal ───────────────────────────────────────────
+  {
+    route: 'chart',
+    lines: [
+      'The chart is crowded with constellations.',
+      'One star is ringed in red.',
+      'Below it, in Elias\'s hand: **antares**.',
+    ],
+  },
+  {
+    route: 'roof',
+    lines: [
+      'The telescope is open to the sky.',
+      'It is warm, as if it has been tracking something for hours.',
+      'No one has touched it in days.',
+    ],
+  },
+  {
+    route: 'antares',
+    lines: [
+      'Antares flickers wrong.',
+      'Not variable — responsive.',
+      'The signal has a **frequency**.',
+    ],
+  },
+  {
+    route: 'frequency',
+    lines: [
+      'The dial runs from 1000 to 2000.',
+      'Hydrogen sings at **1420**.',
+      'I marked it so I would not forget.',
+    ],
+  },
+  {
+    route: '1420',
+    lines: [
+      '1420 megahertz. The universe\'s whisper.',
+      'But this whisper repeats. It waits for me to stop before it starts again.',
+      'It is an **echo**.',
+    ],
+  },
   {
     route: 'echo',
     lines: [
-      "Echoes arrive after the sound, which means you are always listening to the **past**.",
+      'I send a tone. It comes back.',
+      'Not a reflection — a reply.',
+      'There is a **delay** between my voice and its answer.',
     ],
   },
   {
-    route: 'return/return/return',
+    route: 'delay',
     lines: [
-      'Looping is not the same as finding.',
-      'A circle has no destination.',
+      'I timed it.',
+      'The delay is exactly **eight** seconds.',
+      'Someone is counting with me.',
     ],
-    // dead end
   },
-  // ── Number pages ────────────────────────────────────────────────
   {
-    route: 'seven',
+    route: '8',
     lines: [
-      'Seven remains unsaid. You know it anyway.',
-      'The numbers that matter are the ones not written.',
+      'After eight seconds, the signal changes.',
+      'It no longer copies me.',
+      'It sends **numbers**.',
     ],
-    // dead end (interpretive puzzle: which numbers are missing from
-    // the page sequence? 11 is one of them.)
   },
   {
-    route: 'eight',
+    route: 'numbers',
     lines: [
-      "Eight is how many times you've checked for a pattern.",
-      "It's still not here.",
+      'The first message: 8-5-12-12-15.',
+      'Translate the numbers to letters.',
+      'The word is **hello**.',
     ],
-    // dead end
   },
+  // ── Act III: Contact ─────────────────────────────────────────────
   {
-    route: '11',
+    route: 'hello',
     lines: [
-      'Eleven comes after ten, which is why it is always late.',
-      'Some **arrivals** have no reason.',
+      'I said hello back.',
+      'The static shifted.',
+      'I asked my **question**. The answer took twelve minutes.',
     ],
   },
   {
-    route: '42',
+    route: 'question',
     lines: [
-      'The answer was never the question.',
-      "You've been asking the **wrong** ones.",
+      "I wrote: 'Who are you?'",
+      "They did not give a name.",
+      "They said: 'We are what **looks back**.'",
     ],
   },
-  // ── Perception branch ───────────────────────────────────────────
   {
-    route: 'lens',
+    route: 'looks-back',
     lines: [
-      'How you read changes what is here.',
-      'Try reading **between** the lines.',
+      'They exist in the act of being seen.',
+      'They do not have bodies, only attention.',
+      'They want me to **choose**.',
     ],
   },
   {
-    route: 'between/and/between',
+    route: 'kitchen',
     lines: [
-      'Between and between is still between.',
-      'You are always in the middle of something.',
+      'A cup of tea sits on the table.',
+      'It is still warm.',
+      'You did not make it.',
     ],
-    // dead end
   },
-  // ── Connections ─────────────────────────────────────────────────
   {
-    route: '13',
+    route: 'bedroom',
     lines: [
-      'Thirteen is unlucky only for those who count.',
-      'The rest just **walk through** it.',
+      'The bed is made.',
+      'On the pillow, a single hair that is not yours and not Elias\'s.',
+      'It glows faintly in the dark.',
     ],
   },
+  // ── Act IV: The Choice ───────────────────────────────────────────
   {
-    route: 'source',
+    route: 'choose',
     lines: [
-      'This is where the signal was before it arrived.',
-      'The message changed in **transit**.',
+      'Two buttons under cracked glass.',
+      'One marked **open**. One marked **close**.',
+      'Elias wrote below: "I could not decide. I left it for whoever came next."',
     ],
   },
+  // ── Branch: OPEN ─────────────────────────────────────────────────
   {
-    route: 'source/file/034',
+    route: 'open',
     lines: [
-      "Correction 034: replace 'you' with 'we' across all files.",
-      'This is the **only** file where the change was not applied.',
+      'I pressed open.',
+      'The walls became thin. I saw through them. They saw through me.',
+      'We became **visible** to each other.',
     ],
   },
-  // ── Mirror / recursion ──────────────────────────────────────────
   {
-    route: 'mirror',
+    route: 'visible',
     lines: [
-      "If this text is reversed, you're reading correctly.",
-      'The **other** side is closer than it appears.',
+      'They are not hostile.',
+      'They are curious.',
+      'They want to know what it is like to be one person, one ending. They asked if they could **stay**.',
     ],
   },
   {
-    route: '9/9/9/9/9',
+    route: 'stay',
     lines: [
-      'Nine repeated is still nine.',
-      "A number doesn't change just because you **say** it again.",
+      'I said yes.',
+      'Now I am not alone in my own head.',
+      'Sometimes I write things and do not remember writing them. Sometimes the handwriting is **not mine**.',
     ],
   },
   {
-    route: 'fragment',
+    route: 'not-mine',
     lines: [
-      'The whole was never assembled.',
-      'You arrived in the middle of something that has no **beginning**.',
+      'I found a second set of notes.',
+      'They describe the observatory from above.',
+      'They call me "the **previous** occupant." I do not remember moving out.',
     ],
   },
   {
-    route: 'edge',
+    route: 'previous',
     lines: [
-      'The edge is where the page ends, not where you stop.',
-      'Beyond it is more of the same, but it **looks** different.',
+      'Every visitor becomes the keeper.',
+      'Every keeper leaves notes for the next.',
+      'You named me. Now you are where I was. The light is still on. Scratch your name into the gate.',
     ],
   },
-  // ── Fork ────────────────────────────────────────────────────────
+  // ── Branch: CLOSE ────────────────────────────────────────────────
   {
-    route: 'fork/left/path',
+    route: 'close',
     lines: [
-      "Left is a direction that depends on where you're facing.",
-      'You chose without knowing your orientation.',
+      'I pressed close.',
+      'The humming stopped. The lights went out.',
+      'I sat in the **dark** for a long time, telling myself I had done the right thing.',
     ],
-    // dead end
   },
   {
-    route: 'fork/right/path',
+    route: 'dark',
     lines: [
-      "Right is a direction that depends on where you're facing.",
-      'You chose without knowing the consequence.',
-      'There is only **stillness** after the choice.',
+      'In the dark, I could still see the afterimage.',
+      'A shape burned into the inside of my eyelids.',
+      'It was waiting for me to open my **eyes** again.',
     ],
   },
-  // ── Dead ends ───────────────────────────────────────────────────
   {
-    route: 'dead/end',
+    route: 'eyes',
     lines: [
-      "This is where the road runs out.",
-      "The map says 'here be dragons' but the dragons left.",
+      'I cannot forget the eyes.',
+      'I see them when I wake. I see them when I sleep.',
+      'I left the observatory, but I never left the **room**.',
     ],
-    // dead end
   },
   {
-    route: 'dead/end/further',
+    route: 'room',
     lines: [
-      "Further isn't always forward.",
-      "Sometimes it's just more of the same.",
-    ],
-    // dead end
-  },
-  // ── Inward ──────────────────────────────────────────────────────
-  {
-    route: 'inward/inward/inward',
-    lines: [
-      "Going inward enough times, you stop recognizing the walls.",
-      "Everything looks like the **inside** of something else.",
-    ],
-  },
-  // ── Trace ───────────────────────────────────────────────────────
-  {
-    route: 'trace',
-    lines: [
-      "A trace is not a path.",
-      "It's what remains after something **passed through**.",
-    ],
-  },
-  // ── Fragment / unfinished ───────────────────────────────────────
-  {
-    route: 'unfinished',
-    lines: [
-      "This page ends mid-sentence, and that's the only way it could",
-    ],
-    // dead end (intentionally incomplete — no period even)
-  },
-  // ── Silent (hidden clue) ────────────────────────────────────────
-  {
-    route: 'silent',
-    lines: [],   // content is a hidden span in the template
-    hidden: '<span class="h">Nothing is **still** here.</span>',
-  },
-  // ── Time-dependent page ─────────────────────────────────────────
-  {
-    route: 'wait',
-    timeDependent: true,
-    before: [
-      "It's not time yet.",
-      'Some things open only when the light is right.',
-    ],
-    after: [
-      'The window was brief.',
-      'You caught it or you did not.',
-    ],
-    // dead end either way — the "puzzle" is the changing content itself
-  },
-  // ── Final dead end ──────────────────────────────────────────────
-  {
-    route: 'loop',
-    lines: [
-      "Coming back doesn't mean starting over.",
-      "You're different this time.",
-      'The door is the same — you are not.',
-    ],
-    // dead end (deliberate mirror of the entry page)
-  },
-  // ── URL-structure clue page ─────────────────────────────────────
-  {
-    route: 'omit',
-    lines: [
-      "What's left out says more than what remains.",
-      'Look at what is **between** the pages.',
+      'There is no outside.',
+      'The observatory is wherever you look closely enough.',
+      'I came back. The light was still on. Someone had scratched a new name into the gate.',
     ],
   },
 ];
 
-// ── HTML Template ─────────────────────────────────────────────────
-function pageHTML(title, bodyHTML, extraHead = '') {
+// ─── HTML Template ────────────────────────────────────────────────
+function pageHTML(bodyHTML) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>${TOKENS.pageTitle}</title>
+<title>—</title>
 <link rel="stylesheet" href="/common.css">
-${extraHead}
 <style>
 ::selection { background: ${TOKENS.selection}; color: ${TOKENS.text}; }
 ::-moz-selection { background: ${TOKENS.selection}; color: ${TOKENS.text}; }
@@ -352,104 +372,35 @@ ${bodyHTML}
 </html>`;
 }
 
-// ── Render a page's content ───────────────────────────────────────
+// ─── Render a page's content ──────────────────────────────────────
 function renderContent(page) {
-  let html = '<div class="p">\n';
-
-  if (page.timeDependent) {
-    // Time-dependent rendering via JS
-    html += '  <div id="before" class="c">\n';
-    for (const line of page.before) {
-      html += `    <p>${renderLine(line)}</p>\n`;
-    }
-    html += '  </div>\n';
-    html += '  <div id="after" class="c" style="display:none">\n';
-    for (const line of page.after) {
-      html += `    <p>${renderLine(line)}</p>\n`;
-    }
-    html += '  </div>\n';
-    html += `  <script>
-(function(){
-  var h = new Date().getHours();
-  var unlock = 18; // 6pm
-  if (h >= unlock) {
-    document.getElementById('before').style.display = 'none';
-    document.getElementById('after').style.display = '';
+  let html = '<div class="p">\n  <div class="c">\n';
+  for (const line of page.lines) {
+    html += `    <p>${renderLine(line)}</p>\n`;
   }
-})();
-</script>\n`;
-  } else {
-    html += '  <div class="c">\n';
-    for (const line of page.lines) {
-      html += `    <p>${renderLine(line)}</p>\n`;
-    }
-    if (page.hidden) {
-      html += `    ${renderLine(page.hidden)}\n`;
-    }
-    html += '  </div>\n';
-  }
-
-  html += '</div>\n';
-
-  // Browser console whisper (tiny text for /silent - the hidden link works
-  // differently since the word itself is barely visible)
-  if (page.route === 'silent') {
-    html += `<div style="position:fixed;bottom:8px;right:12px;font-size:9px;color:#2a2825;letter-spacing:0.5px;">⌨</div>\n`;
-  }
-
+  html += '  </div>\n</div>\n';
   return html;
 }
 
-// ── Parse inline links from **word** syntax ───────────────────────
+// ─── Parse inline links from **word** syntax ───────────────────────
 function renderLine(text) {
-  // Match **word** patterns where word is a href destination
   return text.replace(/\*\*([^*]+)\*\*/g, (match, word) => {
-    // Determine the URL from a lookup
     const url = wordToURL(word);
     if (url) {
       return `<a href="${url}">${word}</a>`;
     }
-    // Fallback: if we can't resolve, just return the word
     return word;
   });
 }
 
-// ── Word → URL mapping ────────────────────────────────────────────
-// Each key is the **word** as it appears in page text.
-// Values are the target routes (without trailing slash for directory).
-const WORD_MAP = {
-  'one':          '/one/',
-  'second':       '/second/',
-  'third':        '/third/',
-  'door':         '/source/door/',
-  'threshold':    '/threshold/',
-  'beginning':    '/four/',
-  'first':        '/one/',
-  'past':         '/return/return/return/',
-  'arrivals':     '/42/',
-  'wrong':        '/lens/',
-  'between':      '/between/and/between/',
-  'walk through': '/source/door/',
-  'transit':      '/source/file/034/',
-  'only':         '/one/',
-  'other':        '/9/9/9/9/9/',
-  'say':          '/echo/',
-  'looks':        '/lens/',
-  'stillness':    '/still/',
-  'inside':       '/threshold/',
-  'passed through': '/source/door/',
-  'still':        '/still/',
-};
-
 function wordToURL(word) {
   if (WORD_MAP[word]) return WORD_MAP[word];
-  // Fallback: try lowercased, trimmed
   const w = word.toLowerCase().trim();
   if (WORD_MAP[w]) return WORD_MAP[w];
   return null;
 }
 
-// ── Write a page ──────────────────────────────────────────────────
+// ─── Write a page ─────────────────────────────────────────────────
 function writePage(page) {
   let outDir, htmlFile;
   if (page.route === '/') {
@@ -462,18 +413,20 @@ function writePage(page) {
   mkdirSync(outDir, { recursive: true });
 
   const body = renderContent(page);
-  const html = pageHTML(TOKENS.pageTitle, body);
+  const html = pageHTML(body);
   writeFileSync(htmlFile, html, 'utf-8');
   console.log(`  ✓ /${page.route}/`);
 }
 
-// ── Entry point ───────────────────────────────────────────────────
-console.log('Building cryptic puzzle-network site...\n');
+// ─── Entry point ──────────────────────────────────────────────────
+console.log('Building "The Observatory"...\n');
 
+// Clean previous build so removed/renamed pages never linger
+rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
 // Write shared CSS
-const css = `/* ─── cryptic puzzle‑network: design tokens ─── */
+const css = `/* ─── The Observatory ─── */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -506,7 +459,7 @@ body {
 }
 
 .c p {
-  margin-bottom: 1.5em;
+  margin-bottom: 1.6em;
 }
 
 .c p:last-child {
@@ -517,28 +470,18 @@ body {
 a {
   color: ${TOKENS.link};
   text-decoration: none;
+  border-bottom: 1px dotted rgba(200, 195, 188, 0.22);
 }
 
 a:hover, a:focus-visible {
   color: ${TOKENS.linkHover};
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+  border-bottom-color: rgba(232, 228, 223, 0.65);
+  outline: none;
 }
 
 a:focus-visible {
   outline: 1px dotted ${TOKENS.textDim};
   outline-offset: 3px;
-}
-
-/* Hidden text (used on /silent/) */
-.h {
-  display: block;
-  font-size: 6px;
-  line-height: 1;
-  opacity: 0.2;
-  margin-top: 40vh;
-  text-align: center;
 }
 
 /* Selection */
@@ -552,13 +495,13 @@ a:focus-visible {
   color: ${TOKENS.text} !important;
 }
 
-/* Reduced motion: respect user preference */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0s !important; }
 }
 `;
 
-writeFileSync(CSS_PATH, css, 'utf-8');
+writeFileSync(join(OUT, 'common.css'), css, 'utf-8');
 console.log('  ✓ common.css');
 
 // Generate all pages
@@ -567,4 +510,4 @@ for (const page of PAGES) {
 }
 
 console.log(`\nDone. ${PAGES.length} pages generated.`);
-console.log('Start with: node server.mjs\n');
+console.log('Start with: node server.mjs');

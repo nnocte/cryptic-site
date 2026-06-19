@@ -1,4 +1,4 @@
-/* ─── cryptic puzzle‑network: design tokens ─── */
+/* ─── The Observatory ─── */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -8,10 +8,10 @@
 
 html {
   background: #0e0d0c;
-  color: #b5b0ab;
+  color: #c8c3bc;
   font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.9;
+  font-size: 16px;
+  line-height: 1.85;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   min-height: 100%;
@@ -27,11 +27,11 @@ body {
 
 .p {
   width: 100%;
-  max-width: 32em;
+  max-width: 33em;
 }
 
 .c p {
-  margin-bottom: 1.5em;
+  margin-bottom: 1.6em;
 }
 
 .c p:last-child {
@@ -40,15 +40,15 @@ body {
 
 /* Barely-there links */
 a {
-  color: #b5b0ab;
+  color: #c8c3bc;
   text-decoration: none;
+  border-bottom: 1px dotted rgba(200, 195, 188, 0.22);
 }
 
 a:hover, a:focus-visible {
-  color: #d4cfc8;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+  color: #e8e4df;
+  border-bottom-color: rgba(232, 228, 223, 0.65);
+  outline: none;
 }
 
 a:focus-visible {
@@ -56,28 +56,18 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
-/* Hidden text (used on /silent/) */
-.h {
-  display: block;
-  font-size: 6px;
-  line-height: 1;
-  opacity: 0.2;
-  margin-top: 40vh;
-  text-align: center;
-}
-
 /* Selection */
 ::selection {
   background: #3a3632 !important;
-  color: #b5b0ab !important;
+  color: #c8c3bc !important;
 }
 
 ::-moz-selection {
   background: #3a3632 !important;
-  color: #b5b0ab !important;
+  color: #c8c3bc !important;
 }
 
-/* Reduced motion: respect user preference */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0s !important; }
 }
