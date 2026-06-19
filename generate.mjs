@@ -462,23 +462,27 @@ body.tint-stark .status { color: rgba(216, 212, 204, 0.32); }
   margin-bottom: 0;
 }
 
-/* ─── Links: barely there until hover ─── */
+/* ─── Links: invisible as links. The puzzle is to notice the word. ───
+   Default state is identical to body text. The browser's pointer cursor
+   on hover is the only signal. No underline, no border, no color shift
+   in the default state — giving away the link would spoil the puzzle. */
 a {
   color: inherit;
   text-decoration: none;
-  border-bottom: 1px dotted rgba(200, 195, 188, 0.22);
-  transition: color 0.18s ease, border-color 0.18s ease;
+  border-bottom: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
 }
 
 a:hover, a:focus-visible {
   color: ${TOKENS.linkHover};
-  border-bottom-color: rgba(232, 228, 223, 0.65);
   outline: none;
 }
 
 a:focus-visible {
   outline: 1px dotted ${TOKENS.textDim};
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 
 /* Selection */
