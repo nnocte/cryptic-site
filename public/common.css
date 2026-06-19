@@ -1,0 +1,83 @@
+/* ─── cryptic puzzle‑network: design tokens ─── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: #0e0d0c;
+  color: #b5b0ab;
+  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.p {
+  width: 100%;
+  max-width: 32em;
+}
+
+.c p {
+  margin-bottom: 1.5em;
+}
+
+.c p:last-child {
+  margin-bottom: 0;
+}
+
+/* Barely-there links */
+a {
+  color: #b5b0ab;
+  text-decoration: none;
+}
+
+a:hover, a:focus-visible {
+  color: #d4cfc8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+a:focus-visible {
+  outline: 1px dotted #6b6763;
+  outline-offset: 3px;
+}
+
+/* Hidden text (used on /silent/) */
+.h {
+  display: block;
+  font-size: 6px;
+  line-height: 1;
+  opacity: 0.2;
+  margin-top: 40vh;
+  text-align: center;
+}
+
+/* Selection */
+::selection {
+  background: #3a3632 !important;
+  color: #b5b0ab !important;
+}
+
+::-moz-selection {
+  background: #3a3632 !important;
+  color: #b5b0ab !important;
+}
+
+/* Reduced motion: respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0s !important; }
+}

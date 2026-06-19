@@ -1,0 +1,10 @@
+{
+  "name": "cryptic-arg-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node generate.mjs",
+    "serve": "node server.mjs",
+    "start": "node generate.mjs && node server.mjs"
+  }
+}
